@@ -119,13 +119,13 @@ Follow these 5 simple steps to set up your free MongoDB database and import `con
 ### Step 4: Copy the Connection String
 1. Click **Database** in the left sidebar, then click **Connect** next to your cluster.
 2. Select **Drivers** (Node.js).
-3. Copy the URI string, which looks like:
+3. Copy the URI string from Atlas:
    ```text
-   mongodb+srv://arcade_admin:<password>@cluster0.abcde.mongodb.net/?retryWrites=true&w=majority
+   mongodb+srv://<username>:<password>@<cluster-url>/<db_name>?retryWrites=true&w=majority
    ```
 4. Open `.env.local` in this project directory and paste your connection string:
    ```env
-   MONGODB_URI=mongodb+srv://arcade_admin:YOUR_PASSWORD@cluster0.abcde.mongodb.net/google_contacts_db?retryWrites=true&w=majority
+   MONGODB_URI="your_mongodb_connection_string_here"
    ```
 
 ### Step 5: Seed the 9,934 Contacts into MongoDB

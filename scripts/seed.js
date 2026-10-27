@@ -31,7 +31,7 @@ async function seed() {
 
   if (!uri || !uri.trim().startsWith('mongodb')) {
     console.error('❌ Error: MONGODB_URI is not set in .env.local!');
-    console.log('👉 Please set MONGODB_URI=mongodb+srv://<user>:<password>@cluster.mongodb.net/google_contacts_db in .env.local');
+    console.log('👉 Please set MONGODB_URI in your .env.local file');
     console.log('💡 Note: The application will continue to work fine with the local contacts_mql.js file in the meantime!\n');
     process.exit(1);
   }
