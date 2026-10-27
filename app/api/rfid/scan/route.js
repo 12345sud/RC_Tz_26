@@ -4,6 +4,6 @@ export async function POST(request) {
   return handleScanPost(request);
 }
 
-export async function GET() {
-  return handleScanGet();
+export async function GET(request) {
+  return handleScanGet(request);
 }

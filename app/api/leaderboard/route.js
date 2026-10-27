@@ -5,7 +5,8 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get('limit') || '10', 10);
-    const data = await getLeaderboard(limit);
+    const search = searchParams.get('search') || '';
+    const data = await getLeaderboard(limit, search);
     return NextResponse.json({ success: true, ...data });
   } catch (error) {
     console.error('Failed to get leaderboard:', error);

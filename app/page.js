@@ -39,11 +39,12 @@ export default function ArcadeDashboard() {
     }
   }, []);
 
-  // Fetch Leaderboard from API
-  const fetchLeaderboard = useCallback(async () => {
+  // Fetch Leaderboard from API (supports optional search query)
+  const fetchLeaderboard = useCallback(async (search = '') => {
     setIsLoadingLeaderboard(true);
     try {
-      const res = await fetch('/api/leaderboard');
+      const url = search ? `/api/leaderboard?search=${encodeURIComponent(search)}` : '/api/leaderboard';
+      const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         if (data.success) {
@@ -258,6 +259,7 @@ export default function ArcadeDashboard() {
               leaderboard={leaderboard}
               totalPlayed={totalPlayed}
               onRefresh={fetchLeaderboard}
+              onSearch={fetchLeaderboard}
               isLoading={isLoadingLeaderboard}
               isOnlyView={true}
               onToggleOnlyView={() => setIsLeaderboardOnly(false)}
@@ -283,6 +285,7 @@ export default function ArcadeDashboard() {
                 leaderboard={leaderboard}
                 totalPlayed={totalPlayed}
                 onRefresh={fetchLeaderboard}
+                onSearch={fetchLeaderboard}
                 isLoading={isLoadingLeaderboard}
                 isOnlyView={false}
                 onToggleOnlyView={() => setIsLeaderboardOnly(true)}

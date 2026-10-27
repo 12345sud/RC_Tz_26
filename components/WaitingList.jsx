@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Clock, Radio, UserCheck, Trash2, ChevronRight, Search, X } from 'lucide-react';
+import { Clock, Radio, UserCheck, Trash2, ChevronRight, Search, X, User } from 'lucide-react';
 
 export default function WaitingList({
   waitingList = [],
@@ -13,13 +13,13 @@ export default function WaitingList({
 }) {
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Filter list based on roll number or name
+  // Filter list based on student name or roll number
   const filteredList = waitingList.filter((item) => {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return true;
-    const matchRoll = item.rollNumber && item.rollNumber.toLowerCase().includes(query);
     const matchName = item.name && item.name.toLowerCase().includes(query);
-    return matchRoll || matchName;
+    const matchRoll = item.rollNumber && item.rollNumber.toLowerCase().includes(query);
+    return matchName || matchRoll;
   });
 
   return (
@@ -43,7 +43,7 @@ export default function WaitingList({
           </span>
         </div>
 
-        {/* Search Window in Waiting List (Requirement 1) */}
+        {/* Search Window in Waiting List (Searches by Name or Roll Number) */}
         <div className="mb-3 relative">
           <div className="relative flex items-center">
             <Search className="w-4 h-4 text-cyan-400 absolute left-3 pointer-events-none" />
@@ -51,8 +51,8 @@ export default function WaitingList({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search roll number..."
-              className="w-full bg-[#080d16] border border-slate-800 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-slate-500 font-mono uppercase outline-none transition-all"
+              placeholder="Search by name or roll number..."
+              className="w-full bg-[#080d16] border border-slate-800 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 rounded-xl pl-9 pr-8 py-2 text-xs text-white placeholder-slate-500 font-sans outline-none transition-all"
             />
             {searchQuery && (
               <button
@@ -66,7 +66,7 @@ export default function WaitingList({
           </div>
           {searchQuery && (
             <div className="flex items-center justify-between mt-1.5 px-1 text-[10px] text-slate-400 font-mono">
-              <span>Showing {filteredList.length} of {waitingList.length}</span>
+              <span>Found {filteredList.length} matches</span>
               <button
                 onClick={() => setSearchQuery('')}
                 className="text-cyan-400 hover:underline"
@@ -79,7 +79,7 @@ export default function WaitingList({
 
         {/* Quick Instructions Banner */}
         <div className="mb-2.5 px-3 py-1.5 rounded-lg bg-slate-900/60 border border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
-          <span>👇 Click roll number to load player</span>
+          <span>👇 Click student name to load into scorecard</span>
         </div>
 
         {/* Scrollable Waiting Queue (FIFO: oldest at top, newly added appended at bottom) */}
@@ -89,7 +89,7 @@ export default function WaitingList({
               <Clock className="w-8 h-8 mb-2 text-slate-600 opacity-50" />
               {searchQuery ? (
                 <div>
-                  <p className="text-xs text-slate-400 font-mono">No student matching &ldquo;{searchQuery}&rdquo;</p>
+                  <p className="text-xs text-slate-400 font-sans">No student found matching &ldquo;{searchQuery}&rdquo;</p>
                   <button
                     onClick={() => setSearchQuery('')}
                     className="mt-2 text-xs text-cyan-400 hover:underline font-mono"
@@ -110,6 +110,7 @@ export default function WaitingList({
             filteredList.map((item, index) => {
               const isSelected = activePlayer && activePlayer.rollNumber === item.rollNumber;
               const queueNumber = waitingList.findIndex((w) => w.id === item.id || w.rollNumber === item.rollNumber) + 1;
+              const displayName = item.name || `Student ${item.rollNumber}`;
 
               return (
                 <div
@@ -120,9 +121,9 @@ export default function WaitingList({
                       ? 'bg-cyan-950/40 border-cyan-400 shadow-neon-cyan'
                       : 'bg-slate-900/80 border-slate-800 hover:border-cyan-500/60 hover:bg-slate-850'
                   }`}
-                  title="Click to load name into scorecard"
+                  title="Click to load student into scorecard"
                 >
-                  {/* Left: Queue Number & Roll Number */}
+                  {/* Left: Queue Number & Student Name (Primary) */}
                   <div className="flex items-center gap-3 min-w-0 pr-2">
                     <span
                       className={`w-6 h-6 rounded-md font-mono text-xs font-bold flex items-center justify-center flex-shrink-0 ${
@@ -135,18 +136,20 @@ export default function WaitingList({
                     </span>
 
                     <div className="min-w-0">
-                      {/* Prominent Roll Number as requested */}
-                      <div className="text-sm font-black font-mono tracking-wider text-cyan-300 group-hover:text-cyan-200 truncate flex items-center gap-1.5">
-                        <span>{item.rollNumber}</span>
+                      {/* Prominent Student Name (Requirement 1) */}
+                      <div className="text-sm font-bold text-slate-100 group-hover:text-cyan-200 truncate flex items-center gap-1.5">
+                        <span className="truncate">{displayName}</span>
                         {isSelected && (
-                          <span className="text-[10px] uppercase font-sans font-bold bg-cyan-400 text-slate-950 px-1.5 py-0.2 rounded">
+                          <span className="text-[10px] uppercase font-sans font-bold bg-cyan-400 text-slate-950 px-1.5 py-0.2 rounded flex-shrink-0">
                             Playing
                           </span>
                         )}
                       </div>
 
-                      {/* Source tag & indicator */}
-                      <div className="flex items-center gap-2 mt-0.5 text-[10px] text-slate-400 font-mono">
+                      {/* Sub-label: Roll Number & Source Tag */}
+                      <div className="flex items-center gap-2 mt-0.5 text-[11px] text-slate-400 font-mono">
+                        <span className="text-cyan-400 font-semibold">{item.rollNumber}</span>
+                        <span>•</span>
                         <span className="flex items-center gap-1">
                           {item.source === 'MANUAL' ? (
                             <UserCheck className="w-3 h-3 text-purple-400" />
@@ -156,10 +159,6 @@ export default function WaitingList({
                           <span className={item.source === 'MANUAL' ? 'text-purple-300' : 'text-emerald-300'}>
                             {item.source || 'RFID'}
                           </span>
-                        </span>
-                        <span>•</span>
-                        <span className="truncate max-w-[120px] text-slate-400">
-                          {item.name ? item.name : 'Click to fetch name'}
                         </span>
                       </div>
                     </div>

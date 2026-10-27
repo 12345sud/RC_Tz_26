@@ -1,25 +1,30 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Copy, Check, Radio, Terminal, Cpu, Play } from 'lucide-react';
+import { X, Copy, Check, Radio, Terminal, Cpu, Play, Globe, Sparkles } from 'lucide-react';
 
 export default function RfidApiModal({ isOpen, onClose, onSimulatedScan }) {
   const [copiedKey, setCopiedKey] = useState(null);
   const [hostUrl, setHostUrl] = useState('http://localhost:3000');
+  const [detectedOrigin, setDetectedOrigin] = useState('');
   const [sampleRoll, setSampleRoll] = useState('23CEB0B10');
   const [simStatus, setSimStatus] = useState(null);
   const [isSimulating, setIsSimulating] = useState(false);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setHostUrl(window.location.origin);
+      const origin = window.location.origin;
+      setDetectedOrigin(origin);
+      setHostUrl(origin);
     }
   }, []);
 
   if (!isOpen) return null;
 
-  const endpointUrl = `${hostUrl}/api/arcade/scan`;
-  const fallbackUrl = `${hostUrl}/api/rfid/scan`;
+  // Clean trailing slashes
+  const cleanBaseUrl = hostUrl.trim().replace(/\/+$/, '');
+  const endpointUrl = `${cleanBaseUrl}/api/arcade/scan`;
+  const fallbackUrl = `${cleanBaseUrl}/api/rfid/scan`;
   const secretKey = 'rc_arcade_rfid_2026';
 
   const copyToClipboard = (text, key) => {
@@ -103,17 +108,55 @@ void sendRfidScan(String rollNo) {
         </button>
 
         {/* Modal Title */}
-        <div className="flex items-center gap-2.5 mb-2">
+        <div className="flex items-center gap-2.5 mb-1.5">
           <Cpu className="w-5 h-5 text-cyan-400" />
           <h2 className="text-lg font-black tracking-wider text-white font-tech uppercase">
             EMBEDDED TEAM RFID API SPECIFICATIONS
           </h2>
         </div>
-        <p className="text-xs text-slate-400 mb-6">
-          Specifications and documentation for ESP32, Arduino, Raspberry Pi, or any microcontroller sending student RFID taps.
+        <p className="text-xs text-slate-400 mb-4">
+          Documentation and endpoints for ESP32, Arduino, Raspberry Pi, or any microcontroller sending student RFID taps.
         </p>
 
-        {/* Reference Specifications Table (Styled exactly like Image 1) */}
+        {/* Requirement 4: Auto-detect & Custom Domain / Host Switcher for Vercel / Production */}
+        <div className="mb-5 p-3 rounded-xl border border-slate-800 bg-[#080d16]">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
+            <span className="text-[11px] font-mono uppercase tracking-wider text-cyan-300 flex items-center gap-1.5">
+              <Globe className="w-3.5 h-3.5 text-cyan-400" /> Server Host / Deployment Domain:
+            </span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {detectedOrigin && (
+                <button
+                  type="button"
+                  onClick={() => setHostUrl(detectedOrigin)}
+                  className={`px-2 py-0.5 rounded text-[10px] font-mono border transition-all ${
+                    hostUrl === detectedOrigin
+                      ? 'bg-cyan-500/20 text-cyan-300 border-cyan-500/50'
+                      : 'bg-slate-900 text-slate-400 border-slate-800 hover:text-white'
+                  }`}
+                  title="Use current website origin"
+                >
+                  ⚡ Auto-Detected ({detectedOrigin.includes('localhost') ? 'Localhost' : 'Deployed URL'})
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={hostUrl}
+              onChange={(e) => setHostUrl(e.target.value)}
+              placeholder="e.g. https://rc-tz-26.vercel.app or http://192.168.1.100:3000"
+              className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-400 rounded-lg px-3 py-1.5 text-xs text-cyan-300 font-mono outline-none"
+            />
+          </div>
+          <p className="text-[10px] text-slate-500 mt-1.5">
+            ✨ When you deploy on Vercel, all table links, cURL requests, and ESP32 code below automatically switch to your live Vercel domain!
+          </p>
+        </div>
+
+        {/* Reference Specifications Table */}
         <div className="overflow-x-auto rounded-xl border border-slate-800 bg-[#080d16] mb-6">
           <table className="w-full text-left text-xs font-mono">
             <thead>
@@ -137,12 +180,12 @@ void sendRfidScan(String rollNo) {
                 <td className="py-3 px-4 font-bold text-slate-200">Endpoint URL</td>
                 <td className="py-3 px-4">
                   <div className="flex items-center gap-2">
-                    <span className="px-2 py-0.5 rounded bg-slate-800 text-cyan-300 select-all">
+                    <span className="px-2 py-0.5 rounded bg-slate-800 text-cyan-300 select-all font-mono text-[11px] truncate max-w-[280px]">
                       {endpointUrl}
                     </span>
                     <button
                       onClick={() => copyToClipboard(endpointUrl, 'endpoint')}
-                      className="text-slate-400 hover:text-cyan-400 transition-colors"
+                      className="text-slate-400 hover:text-cyan-400 transition-colors flex-shrink-0"
                       title="Copy URL"
                     >
                       {copiedKey === 'endpoint' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
@@ -181,7 +224,7 @@ void sendRfidScan(String rollNo) {
               <tr>
                 <td className="py-3 px-4 font-bold text-slate-200">Fallback URL</td>
                 <td className="py-3 px-4">
-                  <span className="px-2 py-0.5 rounded bg-slate-800 text-cyan-300">
+                  <span className="px-2 py-0.5 rounded bg-slate-800 text-cyan-300 font-mono text-[11px] truncate max-w-[280px] inline-block">
                     {fallbackUrl}
                   </span>
                 </td>
@@ -268,7 +311,7 @@ void sendRfidScan(String rollNo) {
             <div className="flex items-center justify-between text-xs font-bold text-slate-300 mb-1 font-mono">
               <span className="flex items-center gap-1.5">
                 <Terminal className="w-3.5 h-3.5 text-fuchsia-400" />
-                cURL Test Command
+                cURL Test Command (Using Deployed Host)
               </span>
               <button
                 onClick={() => copyToClipboard(sampleCurl, 'curl')}
