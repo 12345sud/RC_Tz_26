@@ -1,29 +1,119 @@
 [
   {
-    "id": "score_1793124608681_7cmsx",
-    "playerName": "saarth",
-    "rollNumber": "24ECB0B49",
-    "playerScore": 0,
+    "id": "score_1793126297079_cgz3m",
+    "playerName": "Rishab Raturi",
+    "rollNumber": "24EEB0A55",
+    "playerScore": 5,
     "robotScore": 0,
-    "result": "DRAW",
-    "playedAt": "2026-10-27T18:10:08.681Z"
+    "result": "WON",
+    "playedAt": "2026-10-27T18:38:17.079Z"
   },
   {
-    "id": "score_1793124659983_ci43i",
-    "playerName": "harsha",
-    "rollNumber": "24ECB0B01",
+    "id": "score_1793126329410_tsktp",
+    "playerName": "Hapani Disha Hasmukhbhai",
+    "rollNumber": "24ECB0A23",
+    "playerScore": 10,
+    "robotScore": 0,
+    "result": "WON",
+    "playedAt": "2026-10-27T18:38:49.410Z"
+  },
+  {
+    "id": "score_1793126355375_6kjfh",
+    "playerName": "Sudhanshu Bhagat",
+    "rollNumber": "24ECB0B57",
+    "playerScore": 15,
+    "robotScore": 0,
+    "result": "WON",
+    "playedAt": "2026-10-27T18:39:15.375Z"
+  },
+  {
+    "id": "score_1793126378956_3msly",
+    "playerName": "Amballa Harshith",
+    "rollNumber": "24EEB0B02",
+    "playerScore": 12,
+    "robotScore": 0,
+    "result": "WON",
+    "playedAt": "2026-10-27T18:39:38.956Z"
+  },
+  {
+    "id": "score_1793126414016_a4u46",
+    "playerName": "Saarth Rajesh Yawale",
+    "rollNumber": "24ECB0B49",
+    "playerScore": 2,
+    "robotScore": 0,
+    "result": "WON",
+    "playedAt": "2026-10-27T18:40:14.016Z"
+  },
+  {
+    "id": "score_1793126440904_n4iea",
+    "playerName": "Anish Sarmah",
+    "rollNumber": "24EEB0B03",
     "playerScore": 6,
     "robotScore": 0,
     "result": "WON",
-    "playedAt": "2026-10-27T18:10:59.983Z"
+    "playedAt": "2026-10-27T18:40:40.905Z"
   },
   {
-    "id": "score_1793124672645_5fie0",
-    "playerName": "sudhanshu bhagat",
-    "rollNumber": "24ECB0B57",
+    "id": "score_1793126460104_ei9px",
+    "playerName": "Ashutosh Srinath Bhat",
+    "rollNumber": "24ECB0A05",
     "playerScore": 8,
     "robotScore": 0,
     "result": "WON",
-    "playedAt": "2026-10-27T18:11:12.645Z"
+    "playedAt": "2026-10-27T18:41:00.104Z"
+  },
+  {
+    "id": "score_1793126489775_8c51j",
+    "playerName": "Pinninti Naga Abhiram",
+    "rollNumber": "23CEB0B10",
+    "playerScore": 10,
+    "robotScore": 0,
+    "result": "WON",
+    "playedAt": "2026-10-27T18:41:29.775Z"
+  },
+  {
+    "id": "score_1793126506333_d8cxp",
+    "playerName": "Aaditya Shukla",
+    "rollNumber": "24CSB0B01",
+    "playerScore": 11,
+    "robotScore": 0,
+    "result": "WON",
+    "playedAt": "2026-10-27T18:41:46.333Z"
+  },
+  {
+    "id": "score_1793126533801_dph9c",
+    "playerName": "Ashwin Balaji Sitsabesan",
+    "rollNumber": "24ECB0B05",
+    "playerScore": 8,
+    "robotScore": 0,
+    "result": "WON",
+    "playedAt": "2026-10-27T18:42:13.801Z"
+  },
+  {
+    "id": "score_1793126555048_kbuzp",
+    "playerName": "Abhijeet Singh Rajpurohit",
+    "rollNumber": "24MEB0B01",
+    "playerScore": 10,
+    "robotScore": 0,
+    "result": "WON",
+    "playedAt": "2026-10-27T18:42:35.048Z"
+  },
+  {
+    "id": "score_1793126591656_fx00g",
+    "playerName": "Rishitha Reddy gurka",
+    "rollNumber": "24ECB0B22",
+    "playerScore": 12,
+    "robotScore": 0,
+    "result": "WON",
+    "playedAt": "2026-10-27T18:43:11.656Z"
+  },
+  {
+    "id": "score_1793126659865_mk82l",
+    "playerName": "Bonthu Kaushik Reddy",
+    "rollNumber": "24ECB0B11",
+    "playerScore": 0,
+    "robotScore": 0,
+    "result": "DRAW",
+    "playedAt": "2026-10-27T18:44:19.865Z"
   }
 ]

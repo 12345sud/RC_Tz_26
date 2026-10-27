@@ -1,7 +1,19 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Search, Sparkles, CheckCircle2, UserCheck } from 'lucide-react';
+import { X, Search, Sparkles, CheckCircle2 } from 'lucide-react';
+
+function cleanStudentName(rawName, roll) {
+  if (!rawName) return '';
+  let name = rawName.trim();
+  if (roll) {
+    const cleanRoll = roll.trim().toUpperCase();
+    if (name.toUpperCase().startsWith(cleanRoll)) {
+      name = name.substring(cleanRoll.length).trim();
+    }
+  }
+  return name || rawName;
+}
 
 export default function ManualRegistrationModal({ isOpen, onClose, onRegisterStudent }) {
   const [rollNumber, setRollNumber] = useState('');
@@ -38,9 +50,13 @@ export default function ManualRegistrationModal({ isOpen, onClose, onRegisterStu
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.student) {
-          setName(data.student.name || '');
+          const formattedName = cleanStudentName(data.student.name, clean);
+          setName(formattedName);
           setMail(data.student.mail || '');
-          setFoundStudent(data.student);
+          setFoundStudent({
+            ...data.student,
+            cleanName: formattedName
+          });
           setErrorMsg('');
           return;
         }
@@ -77,11 +93,16 @@ export default function ManualRegistrationModal({ isOpen, onClose, onRegisterStu
     setErrorMsg('');
 
     try {
+      const cleanRoll = rollNumber.trim().toUpperCase();
+      const finalName = name.trim() || (foundStudent ? foundStudent.cleanName : `Student ${cleanRoll}`);
+      const finalMail = mail.trim() || (foundStudent ? foundStudent.mail : '');
+
       await onRegisterStudent({
-        rollNumber: rollNumber.trim().toUpperCase(),
-        name: name.trim() || (foundStudent ? foundStudent.name : `Student ${rollNumber.trim().toUpperCase()}`),
-        mail: mail.trim() || (foundStudent ? foundStudent.mail : '')
+        rollNumber: cleanRoll,
+        name: finalName,
+        mail: finalMail
       });
+
       // Reset form and close
       setRollNumber('');
       setName('');
@@ -139,23 +160,43 @@ export default function ManualRegistrationModal({ isOpen, onClose, onRegisterStu
               </label>
               {isSearching ? (
                 <span className="text-[10px] text-cyan-400 flex items-center gap-1 font-mono">
-                  <Sparkles className="w-3 h-3 animate-spin" /> Looking up student...
+                  <Sparkles className="w-3 h-3 animate-spin" /> Looking up NITW student...
                 </span>
               ) : foundStudent ? (
                 <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-mono font-bold">
-                  <CheckCircle2 className="w-3 h-3" /> NITW Student Verified
+                  <CheckCircle2 className="w-3.5 h-3.5" /> NITW Student Verified
                 </span>
               ) : null}
             </div>
-            <input
-              type="text"
-              required
-              value={rollNumber}
-              onChange={handleRollChange}
-              onBlur={handleRollBlur}
-              placeholder="e.g. 23CEB0B10"
-              className="w-full bg-[#080d16] border border-[#1e293b] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 outline-none transition-all font-mono uppercase"
-            />
+            
+            <div className="relative flex items-center">
+              <input
+                type="text"
+                required
+                value={rollNumber}
+                onChange={handleRollChange}
+                onBlur={handleRollBlur}
+                placeholder="e.g. 24ECB0B57 or 23CEB0B10"
+                className="w-full bg-[#080d16] border border-[#1e293b] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 outline-none transition-all font-mono uppercase pr-20"
+              />
+              <button
+                type="button"
+                onClick={() => lookupRollNumber(rollNumber)}
+                className="absolute right-2 px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-[10px] font-mono text-cyan-400 transition-colors"
+                title="Lookup student details"
+              >
+                Fetch
+              </button>
+            </div>
+
+            {foundStudent && (
+              <div className="mt-2 p-2 rounded-lg bg-emerald-950/40 border border-emerald-500/40 text-[11px] text-emerald-300 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                <span className="truncate">
+                  Found: <strong>{foundStudent.cleanName}</strong> ({foundStudent.mail || foundStudent.rollNumber})
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Player Name Field */}
@@ -223,7 +264,7 @@ export default function ManualRegistrationModal({ isOpen, onClose, onRegisterStu
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2.5 rounded-xl text-xs font-mono font-bold tracking-wider uppercase text-slate-950 bg-[#00f0ff] hover:bg-[#33f3ff] shadow-neon-cyan transition-all disabled:opacity-50"
+              className="px-6 py-2.5 rounded-xl text-xs font-mono font-bold tracking-wider uppercase text-slate-950 bg-[#00f0ff] hover:bg-[#33f3ff] shadow-neon-cyan transition-all disabled:opacity-50 font-bold"
             >
               {isSubmitting ? 'REGISTERING...' : 'REGISTER PLAYER'}
             </button>
