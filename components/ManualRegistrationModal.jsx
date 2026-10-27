@@ -1,44 +1,68 @@
 'use client';
 
-import React, { useState } from 'react';
-import { X, Search, Sparkles } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Search, Sparkles, CheckCircle2, UserCheck } from 'lucide-react';
 
 export default function ManualRegistrationModal({ isOpen, onClose, onRegisterStudent }) {
   const [rollNumber, setRollNumber] = useState('');
   const [name, setName] = useState('');
   const [mail, setMail] = useState('');
   const [isSearching, setIsSearching] = useState(false);
+  const [foundStudent, setFoundStudent] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
-  if (!isOpen) return null;
+  // Reset states when modal opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      setRollNumber('');
+      setName('');
+      setMail('');
+      setFoundStudent(null);
+      setErrorMsg('');
+      setIsSearching(false);
+    }
+  }, [isOpen]);
 
-  // Auto-lookup name from database when roll number is entered
-  const handleRollChange = async (e) => {
+  // Perform lookup by roll number
+  const lookupRollNumber = async (rawRoll) => {
+    const clean = (rawRoll || '').trim().toUpperCase();
+    if (clean.length < 5) {
+      setFoundStudent(null);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const res = await fetch(`/api/student/${encodeURIComponent(clean)}`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.student) {
+          setName(data.student.name || '');
+          setMail(data.student.mail || '');
+          setFoundStudent(data.student);
+          setErrorMsg('');
+          return;
+        }
+      }
+      setFoundStudent(null);
+    } catch (err) {
+      // silent fallback
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleRollChange = (e) => {
     const val = e.target.value;
     setRollNumber(val);
     setErrorMsg('');
+    lookupRollNumber(val);
+  };
 
-    // If looks like a valid roll number (6-12 chars), trigger auto-lookup
-    const clean = val.trim().toUpperCase();
-    if (clean.length >= 6) {
-      setIsSearching(true);
-      try {
-        const res = await fetch(`/api/student/${encodeURIComponent(clean)}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (data.student && data.student.name) {
-            setName(data.student.name);
-            if (data.student.mail && !mail) {
-              setMail(data.student.mail);
-            }
-          }
-        }
-      } catch (err) {
-        // silent fallback
-      } finally {
-        setIsSearching(false);
-      }
+  const handleRollBlur = () => {
+    if (rollNumber) {
+      lookupRollNumber(rollNumber);
     }
   };
 
@@ -55,13 +79,14 @@ export default function ManualRegistrationModal({ isOpen, onClose, onRegisterStu
     try {
       await onRegisterStudent({
         rollNumber: rollNumber.trim().toUpperCase(),
-        name: name.trim() || `Student ${rollNumber.trim().toUpperCase()}`,
-        mail: mail.trim()
+        name: name.trim() || (foundStudent ? foundStudent.name : `Student ${rollNumber.trim().toUpperCase()}`),
+        mail: mail.trim() || (foundStudent ? foundStudent.mail : '')
       });
       // Reset form and close
       setRollNumber('');
       setName('');
       setMail('');
+      setFoundStudent(null);
       onClose();
     } catch (err) {
       setErrorMsg(err.message || 'Failed to register player');
@@ -69,6 +94,8 @@ export default function ManualRegistrationModal({ isOpen, onClose, onRegisterStu
       setIsSubmitting(false);
     }
   };
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fadeIn">
@@ -110,50 +137,75 @@ export default function ManualRegistrationModal({ isOpen, onClose, onRegisterStu
               <label className="text-[11px] font-mono tracking-widest uppercase text-slate-300">
                 PLAYER ROLL NUMBER / COLLEGE ID
               </label>
-              {isSearching && (
+              {isSearching ? (
                 <span className="text-[10px] text-cyan-400 flex items-center gap-1 font-mono">
-                  <Sparkles className="w-3 h-3 animate-spin" /> Auto-looking up name...
+                  <Sparkles className="w-3 h-3 animate-spin" /> Looking up student...
                 </span>
-              )}
+              ) : foundStudent ? (
+                <span className="text-[10px] text-emerald-400 flex items-center gap-1 font-mono font-bold">
+                  <CheckCircle2 className="w-3 h-3" /> NITW Student Verified
+                </span>
+              ) : null}
             </div>
             <input
               type="text"
               required
               value={rollNumber}
               onChange={handleRollChange}
+              onBlur={handleRollBlur}
               placeholder="e.g. 23CEB0B10"
-              className="w-full bg-[#080d16] border border-[#1e293b] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 outline-none transition-all font-mono"
+              className="w-full bg-[#080d16] border border-[#1e293b] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 outline-none transition-all font-mono uppercase"
             />
           </div>
 
           {/* Player Name Field */}
           <div>
-            <label className="block text-[11px] font-mono tracking-widest uppercase text-slate-300 mb-1.5">
-              PLAYER NAME
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-[11px] font-mono tracking-widest uppercase text-slate-300">
+                PLAYER NAME
+              </label>
+              {foundStudent && (
+                <span className="text-[10px] text-cyan-400 font-mono">
+                  Auto-filled from database
+                </span>
+              )}
+            </div>
             <input
               type="text"
+              required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Enter student's full name"
-              className="w-full bg-[#080d16] border border-[#1e293b] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 outline-none transition-all"
+              placeholder="Student full name"
+              className={`w-full bg-[#080d16] border rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 outline-none transition-all ${
+                foundStudent
+                  ? 'border-emerald-500/50 bg-emerald-950/10 text-emerald-100 font-semibold'
+                  : 'border-[#1e293b] focus:border-cyan-400'
+              }`}
             />
-            <p className="text-[10px] text-slate-500 mt-1">
-              (Will auto-fetch from directory if left blank and roll number matches database)
-            </p>
           </div>
 
-          {/* Email ID (Optional) */}
+          {/* Email ID Field */}
           <div>
-            <label className="block text-[11px] font-mono tracking-widest uppercase text-slate-300 mb-1.5">
-              PLAYER EMAIL ID (OPTIONAL)
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-[11px] font-mono tracking-widest uppercase text-slate-300">
+                PLAYER EMAIL ID (OPTIONAL)
+              </label>
+              {foundStudent && foundStudent.mail && (
+                <span className="text-[10px] text-cyan-400 font-mono">
+                  Auto-filled from database
+                </span>
+              )}
+            </div>
             <input
               type="email"
               value={mail}
               onChange={(e) => setMail(e.target.value)}
-              placeholder="Enter student's email address"
-              className="w-full bg-[#080d16] border border-[#1e293b] focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 outline-none transition-all font-mono text-xs"
+              placeholder="student@student.nitw.ac.in"
+              className={`w-full bg-[#080d16] border rounded-xl px-4 py-3 text-sm text-white placeholder-slate-600 outline-none transition-all font-mono text-xs ${
+                foundStudent && foundStudent.mail
+                  ? 'border-emerald-500/50 bg-emerald-950/10 text-emerald-200'
+                  : 'border-[#1e293b] focus:border-cyan-400'
+              }`}
             />
           </div>
 

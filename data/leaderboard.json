@@ -1,1 +1,29 @@
-[]
+[
+  {
+    "id": "score_1793124608681_7cmsx",
+    "playerName": "saarth",
+    "rollNumber": "24ECB0B49",
+    "playerScore": 0,
+    "robotScore": 0,
+    "result": "DRAW",
+    "playedAt": "2026-10-27T18:10:08.681Z"
+  },
+  {
+    "id": "score_1793124659983_ci43i",
+    "playerName": "harsha",
+    "rollNumber": "24ECB0B01",
+    "playerScore": 6,
+    "robotScore": 0,
+    "result": "WON",
+    "playedAt": "2026-10-27T18:10:59.983Z"
+  },
+  {
+    "id": "score_1793124672645_5fie0",
+    "playerName": "sudhanshu bhagat",
+    "rollNumber": "24ECB0B57",
+    "playerScore": 8,
+    "robotScore": 0,
+    "result": "WON",
+    "playedAt": "2026-10-27T18:11:12.645Z"
+  }
+]
