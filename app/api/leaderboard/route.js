@@ -17,20 +17,32 @@ export async function GET(request) {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { playerName, rollNumber, playerScore, robotScore } = body;
-
-    if (playerScore === undefined || robotScore === undefined) {
-      return NextResponse.json(
-        { success: false, error: 'Both playerScore and robotScore are required' },
-        { status: 400 }
-      );
-    }
+    const { 
+      playerName, 
+      rollNumber, 
+      playerScore, 
+      robotScore,
+      opponentScore,
+      opponentName,
+      opponentRoll,
+      player1,
+      player2,
+      p1Score,
+      p2Score
+    } = body;
 
     const saved = await saveScore({
       playerName,
       rollNumber,
       playerScore,
-      robotScore
+      robotScore,
+      opponentScore,
+      opponentName,
+      opponentRoll,
+      player1,
+      player2,
+      p1Score,
+      p2Score
     });
 
     const updatedLeaderboard = await getLeaderboard(10);

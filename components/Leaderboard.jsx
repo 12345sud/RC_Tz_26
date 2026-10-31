@@ -38,7 +38,8 @@ export default function Leaderboard({
         if (!q) return true;
         const matchName = item.playerName && item.playerName.toLowerCase().includes(q);
         const matchRoll = item.rollNumber && item.rollNumber.toLowerCase().includes(q);
-        return matchName || matchRoll;
+        const matchOpponent = item.opponentName && item.opponentName.toLowerCase().includes(q);
+        return matchName || matchRoll || matchOpponent;
       });
 
   const isSearching = searchQuery.trim().length > 0;
@@ -107,7 +108,7 @@ export default function Leaderboard({
             </div>
             <div>
               <div className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Total Players Played
+                Total Matches Played
               </div>
               <div className="text-xs sm:text-sm text-slate-200 font-medium">
                 Matches Recorded So Far
@@ -122,7 +123,7 @@ export default function Leaderboard({
           </div>
         </div>
 
-        {/* REQUIREMENT 2: Search Box on Leaderboard */}
+        {/* Search Box on Leaderboard */}
         <div className="mb-3 relative">
           <div className="relative flex items-center">
             <Search className="w-4 h-4 text-amber-400 absolute left-3 pointer-events-none" />
@@ -199,6 +200,12 @@ export default function Leaderboard({
                 rowBorder = 'border-amber-700/30 bg-amber-950/15';
               }
 
+              // Opponent details (the student who lost/played against)
+              const opponentScore = item.opponentScore !== undefined ? item.opponentScore : (item.robotScore || 0);
+              const opponentLabel = item.opponentName && item.opponentName !== 'Autonomous Bot'
+                ? `vs ${item.opponentName}`
+                : 'vs Opponent';
+
               return (
                 <div
                   key={item.id || index}
@@ -206,12 +213,12 @@ export default function Leaderboard({
                     isOnlyView ? 'py-3.5' : ''
                   }`}
                 >
-                  {/* Left: Rank & Player info */}
+                  {/* Left: Rank & Winner / Player info */}
                   <div className="flex items-center gap-3.5 min-w-0 pr-2">
                     <div
                       className={`w-8 h-8 rounded-lg border font-mono font-bold text-sm flex items-center justify-center flex-shrink-0 ${rankBadgeStyle}`}
                     >
-                      {isGold ? <Flame className="w-4 h-4 text-amber-400" /> : `#${rank}`}
+                      {isGold ? <Flame className="w-5 h-5 text-amber-400" /> : `#${rank}`}
                     </div>
 
                     <div className="min-w-0">
@@ -224,16 +231,16 @@ export default function Leaderboard({
                     </div>
                   </div>
 
-                  {/* Right: Scores & Status */}
+                  {/* Right: Scores & Opponent label (shows vs the name of the person who lost) */}
                   <div className="flex items-center gap-3 flex-shrink-0 text-right">
                     <div className="text-right">
                       <div className={`font-black font-led text-slate-100 ${isOnlyView ? 'text-lg sm:text-xl' : 'text-sm'}`}>
                         <span className="text-cyan-400">{item.playerScore}</span>
                         <span className="text-slate-500 mx-1.5">-</span>
-                        <span className="text-pink-400">{item.robotScore}</span>
+                        <span className="text-pink-400">{opponentScore}</span>
                       </div>
-                      <div className="text-[10px] font-mono text-slate-500 uppercase">
-                        vs Robot
+                      <div className="text-[10px] font-mono text-slate-400 truncate max-w-[130px]" title={opponentLabel}>
+                        {opponentLabel}
                       </div>
                     </div>
 
@@ -246,7 +253,7 @@ export default function Leaderboard({
                           : 'bg-amber-950 text-amber-400 border border-amber-800/60'
                       }`}
                     >
-                      {item.result || (item.playerScore > item.robotScore ? 'WON' : 'LOST')}
+                      {item.result || (item.playerScore > opponentScore ? 'WON' : 'LOST')}
                     </span>
                   </div>
                 </div>

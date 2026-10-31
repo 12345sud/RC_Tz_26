@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Clock, Radio, UserCheck, Trash2, ChevronRight, Search, X, User } from 'lucide-react';
+import { Clock, Radio, UserCheck, Trash2, ChevronRight, Search, X, UserPlus, User } from 'lucide-react';
 
 export default function WaitingList({
   waitingList = [],
-  activePlayer,
+  player1,
+  player2,
+  activeSlot = 1,
   onSelectPlayer,
   onRemovePlayer,
   onOpenManualModal,
@@ -43,7 +45,7 @@ export default function WaitingList({
           </span>
         </div>
 
-        {/* Search Window in Waiting List (Searches by Name or Roll Number) */}
+        {/* Search Window in Waiting List */}
         <div className="mb-3 relative">
           <div className="relative flex items-center">
             <Search className="w-4 h-4 text-cyan-400 absolute left-3 pointer-events-none" />
@@ -77,12 +79,17 @@ export default function WaitingList({
           )}
         </div>
 
-        {/* Quick Instructions Banner */}
+        {/* Quick Instructions Banner indicating which player slot is targeted */}
         <div className="mb-2.5 px-3 py-1.5 rounded-lg bg-slate-900/60 border border-slate-800 text-[11px] text-slate-400 flex items-center justify-between">
-          <span>👇 Click student name to load into scorecard</span>
+          <span>
+            👉 Click student to assign as{' '}
+            <strong className={activeSlot === 1 ? 'text-pink-400 font-bold' : 'text-cyan-300 font-bold'}>
+              Player {activeSlot}
+            </strong>
+          </span>
         </div>
 
-        {/* Scrollable Waiting Queue (FIFO: oldest at top, newly added appended at bottom) */}
+        {/* Scrollable Waiting Queue */}
         <div className="flex-1 overflow-y-auto space-y-2 pr-1 max-h-[340px] min-h-[220px]">
           {filteredList.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center py-10 text-center text-slate-500">
@@ -108,27 +115,34 @@ export default function WaitingList({
             </div>
           ) : (
             filteredList.map((item, index) => {
-              const isSelected = activePlayer && activePlayer.rollNumber === item.rollNumber;
+              const isP1 = player1 && player1.rollNumber === item.rollNumber;
+              const isP2 = player2 && player2.rollNumber === item.rollNumber;
+              const isSelected = isP1 || isP2;
               const queueNumber = waitingList.findIndex((w) => w.id === item.id || w.rollNumber === item.rollNumber) + 1;
               const displayName = item.name || `Student ${item.rollNumber}`;
+
+              let borderStyle = 'bg-slate-900/80 border-slate-800 hover:border-cyan-500/60 hover:bg-slate-850';
+              if (isP1) {
+                borderStyle = 'bg-pink-950/40 border-pink-500 shadow-neon-pink';
+              } else if (isP2) {
+                borderStyle = 'bg-cyan-950/40 border-cyan-400 shadow-neon-cyan';
+              }
 
               return (
                 <div
                   key={item.id || index}
                   onClick={() => onSelectPlayer(item)}
-                  className={`group cursor-pointer p-3 rounded-xl border transition-all flex items-center justify-between ${
-                    isSelected
-                      ? 'bg-cyan-950/40 border-cyan-400 shadow-neon-cyan'
-                      : 'bg-slate-900/80 border-slate-800 hover:border-cyan-500/60 hover:bg-slate-850'
-                  }`}
-                  title="Click to load student into scorecard"
+                  className={`group cursor-pointer p-3 rounded-xl border transition-all flex items-center justify-between ${borderStyle}`}
+                  title="Click to assign to match"
                 >
-                  {/* Left: Queue Number & Student Name (Primary) */}
+                  {/* Left: Queue Number & Student Name */}
                   <div className="flex items-center gap-3 min-w-0 pr-2">
                     <span
                       className={`w-6 h-6 rounded-md font-mono text-xs font-bold flex items-center justify-center flex-shrink-0 ${
-                        isSelected
-                          ? 'bg-cyan-400 text-slate-950'
+                        isP1 
+                          ? 'bg-pink-500 text-white' 
+                          : isP2 
+                          ? 'bg-cyan-400 text-slate-950' 
                           : 'bg-slate-800 text-slate-400 group-hover:text-cyan-300'
                       }`}
                     >
@@ -136,12 +150,17 @@ export default function WaitingList({
                     </span>
 
                     <div className="min-w-0">
-                      {/* Prominent Student Name (Requirement 1) */}
+                      {/* Prominent Student Name */}
                       <div className="text-sm font-bold text-slate-100 group-hover:text-cyan-200 truncate flex items-center gap-1.5">
                         <span className="truncate">{displayName}</span>
-                        {isSelected && (
+                        {isP1 && (
+                          <span className="text-[10px] uppercase font-sans font-bold bg-pink-500 text-white px-1.5 py-0.2 rounded flex-shrink-0">
+                            P1
+                          </span>
+                        )}
+                        {isP2 && (
                           <span className="text-[10px] uppercase font-sans font-bold bg-cyan-400 text-slate-950 px-1.5 py-0.2 rounded flex-shrink-0">
-                            Playing
+                            P2
                           </span>
                         )}
                       </div>

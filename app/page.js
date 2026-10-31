@@ -12,7 +12,12 @@ export default function ArcadeDashboard() {
   const [waitingList, setWaitingList] = useState([]);
   const [leaderboard, setLeaderboard] = useState([]);
   const [totalPlayed, setTotalPlayed] = useState(0);
-  const [activePlayer, setActivePlayer] = useState(null);
+  
+  // Player 1 & Player 2 selection
+  const [player1, setPlayer1] = useState(null);
+  const [player2, setPlayer2] = useState(null);
+  const [activeSlot, setActiveSlot] = useState(1); // 1 or 2 (which slot next clicked player fills)
+
   const [isLeaderboardOnly, setIsLeaderboardOnly] = useState(false);
   
   // Modals
@@ -84,46 +89,77 @@ export default function ArcadeDashboard() {
   }, [isLeaderboardOnly]);
 
   /**
-   * When a user clicks any Roll Number in the Waiting List:
-   * Look up student name from database and set active player in the Scorecard!
+   * Helper to resolve full student object
    */
-  const handleSelectPlayerFromQueue = async (item) => {
+  const resolveStudent = async (item) => {
     const roll = item.rollNumber;
-    
-    // If name is already present on the item and not generic
     if (item.name && !item.name.startsWith('Student (') && !item.name.startsWith('Player (')) {
-      setActivePlayer({
+      return {
         rollNumber: roll,
         name: item.name,
         mail: item.mail || ''
-      });
-      return;
+      };
     }
 
-    // Otherwise, fetch fresh student name from MongoDB / database file
     try {
       const res = await fetch(`/api/student/${encodeURIComponent(roll)}`);
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.student) {
-          setActivePlayer({
+          return {
             rollNumber: roll,
             name: data.student.name,
-            mail: data.student.mail
-          });
-          return;
+            mail: data.student.mail || ''
+          };
         }
       }
     } catch (err) {
       console.warn('Student lookup error:', err);
     }
 
-    // Fallback if not found
-    setActivePlayer({
+    return {
       rollNumber: roll,
       name: item.name || `Student ${roll}`,
       mail: item.mail || ''
-    });
+    };
+  };
+
+  /**
+   * When a user clicks any Student in the Waiting List:
+   * Assigns to Player 1 or Player 2 depending on current active slot!
+   */
+  const handleSelectPlayerFromQueue = async (item) => {
+    const resolved = await resolveStudent(item);
+
+    // If student is already selected in Player 1 and we click on slot 1, toggle/keep
+    // If selecting slot 1:
+    if (activeSlot === 1) {
+      setPlayer1(resolved);
+      // Auto-advance cursor to slot 2 if Player 2 is empty and different
+      if (!player2) {
+        setActiveSlot(2);
+      }
+    } else {
+      // Selecting slot 2:
+      setPlayer2(resolved);
+      // If Player 1 is empty, point to 1
+      if (!player1) {
+        setActiveSlot(1);
+      }
+    }
+  };
+
+  /**
+   * Clear an assigned player
+   */
+  const handleClearPlayer = (slot) => {
+    if (slot === 1) {
+      setPlayer1(null);
+      setActiveSlot(1);
+    } else {
+      setPlayer2(null);
+      setActiveSlot(2);
+    }
   };
 
   /**
@@ -134,9 +170,12 @@ export default function ArcadeDashboard() {
       await fetch(`/api/waiting-list?id=${encodeURIComponent(idOrRoll)}`, {
         method: 'DELETE'
       });
-      // If the removed player was active, clear active player
-      if (activePlayer && (activePlayer.rollNumber === idOrRoll || activePlayer.id === idOrRoll)) {
-        setActivePlayer(null);
+      // If the removed player was assigned, clear slot
+      if (player1 && (player1.rollNumber === idOrRoll || player1.id === idOrRoll)) {
+        setPlayer1(null);
+      }
+      if (player2 && (player2.rollNumber === idOrRoll || player2.id === idOrRoll)) {
+        setPlayer2(null);
       }
       fetchWaitingList();
     } catch (err) {
@@ -160,32 +199,37 @@ export default function ArcadeDashboard() {
 
     await fetchWaitingList();
 
-    // If scorecard has no player, auto-select newly registered player
-    if (!activePlayer) {
-      setActivePlayer({
-        rollNumber,
-        name: name || `Student ${rollNumber}`,
-        mail: mail || ''
-      });
+    const registered = {
+      rollNumber,
+      name: name || `Student ${rollNumber}`,
+      mail: mail || ''
+    };
+
+    // Auto-fill empty player slots
+    if (!player1) {
+      setPlayer1(registered);
+      setActiveSlot(2);
+    } else if (!player2 && player1.rollNumber !== rollNumber) {
+      setPlayer2(registered);
     }
 
     return data;
   };
 
   /**
-   * Save match score to Leaderboard
+   * Save match score to Leaderboard: Player 1 vs Player 2
    */
-  const handleSaveScore = async ({ playerName, rollNumber, playerScore, robotScore }) => {
+  const handleSaveScore = async ({ player1, player2, p1Score, p2Score }) => {
     setIsSavingScore(true);
     try {
       const res = await fetch('/api/leaderboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          playerName,
-          rollNumber,
-          playerScore,
-          robotScore
+          player1,
+          player2,
+          p1Score,
+          p2Score
         })
       });
 
@@ -194,11 +238,18 @@ export default function ArcadeDashboard() {
         setLeaderboard(data.leaderboard || []);
         setTotalPlayed(data.totalPlayed || 0);
 
-        // Remove the completed player from the waiting list queue
-        if (rollNumber) {
-          await handleRemoveFromQueue(rollNumber);
+        // Remove both completed players from the waiting list queue
+        if (player1 && player1.rollNumber) {
+          await handleRemoveFromQueue(player1.rollNumber);
         }
-        setActivePlayer(null);
+        if (player2 && player2.rollNumber) {
+          await handleRemoveFromQueue(player2.rollNumber);
+        }
+
+        // Reset players and start fresh for next match
+        setPlayer1(null);
+        setPlayer2(null);
+        setActiveSlot(1);
         return { success: true };
       } else {
         alert(data.error || 'Failed to save score');
@@ -226,7 +277,9 @@ export default function ArcadeDashboard() {
       const res = await fetch('/api/admin/reset', { method: 'POST' });
       const data = await res.json();
       if (res.ok && data.success) {
-        setActivePlayer(null);
+        setPlayer1(null);
+        setPlayer2(null);
+        setActiveSlot(1);
         await fetchWaitingList();
         await fetchLeaderboard();
         alert('✅ Tournament data successfully reset to 0! Ready for the live event.');
@@ -269,17 +322,21 @@ export default function ArcadeDashboard() {
           /* Normal 3-Section Grid Layout */
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
             
-            {/* SECTION 1: SCORECARD (Left: 4 cols) */}
+            {/* SECTION 1: SCORECARD (Player 1 vs Player 2) */}
             <div className="lg:col-span-4 h-full">
               <Scorecard
-                activePlayer={activePlayer}
+                player1={player1}
+                player2={player2}
+                activeSlot={activeSlot}
+                onSelectSlot={setActiveSlot}
+                onClearPlayer={handleClearPlayer}
                 onSaveScore={handleSaveScore}
                 onResetMatch={() => {}}
                 isSaving={isSavingScore}
               />
             </div>
 
-            {/* SECTION 2: LEADERBOARD (Middle: 5 cols) */}
+            {/* SECTION 2: LEADERBOARD */}
             <div className="lg:col-span-5 h-full">
               <Leaderboard
                 leaderboard={leaderboard}
@@ -292,11 +349,13 @@ export default function ArcadeDashboard() {
               />
             </div>
 
-            {/* SECTION 3: WAITING LIST (Right: 3 cols) */}
+            {/* SECTION 3: WAITING LIST (Allows selecting Player 1 & Player 2) */}
             <div className="lg:col-span-3 h-full">
               <WaitingList
                 waitingList={waitingList}
-                activePlayer={activePlayer}
+                player1={player1}
+                player2={player2}
+                activeSlot={activeSlot}
                 onSelectPlayer={handleSelectPlayerFromQueue}
                 onRemovePlayer={handleRemoveFromQueue}
                 onOpenManualModal={() => setIsManualModalOpen(true)}
@@ -321,14 +380,14 @@ export default function ArcadeDashboard() {
         </div>
       </footer>
 
-      {/* Manual Registration Modal (matches Image 3) */}
+      {/* Manual Registration Modal */}
       <ManualRegistrationModal
         isOpen={isManualModalOpen}
         onClose={() => setIsManualModalOpen(false)}
         onRegisterStudent={handleRegisterManualPlayer}
       />
 
-      {/* RFID Hardware API Specs & Simulator Modal (matches Image 1) */}
+      {/* RFID Hardware API Specs & Simulator Modal */}
       <RfidApiModal
         isOpen={isApiModalOpen}
         onClose={() => setIsApiModalOpen(false)}
